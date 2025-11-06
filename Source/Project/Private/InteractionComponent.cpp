@@ -1,7 +1,9 @@
 #include "InteractionComponent.h"
+#include "InteractionInterface.h"
 #include "GameFramework/Actor.h"
 #include "Engine/World.h"
 #include "DrawDebugHelpers.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 UInteractionComponent::UInteractionComponent()
 {
@@ -13,20 +15,44 @@ void UInteractionComponent::Interact()
     AActor* Owner = GetOwner();
     if (!Owner) return;
 
-    FVector Start = Owner->GetActorLocation();
-    FVector End = Start + Owner->GetActorForwardVector() * InteractionDistance;
+    // Box parameters (extent is half-size)
+    FVector BoxLocation = Owner->GetActorLocation();
+    FVector BoxExtent = FVector(100.0f, 100.0f, 100.0f);
 
-    FHitResult Hit;
-    FCollisionQueryParams Params;
-    Params.AddIgnoredActor(Owner);
+    // Object types to consider for overlap (adjust as needed)
+    TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
+    ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_WorldStatic));
+    ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_WorldDynamic));
+    ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_Pawn));
 
-    if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params))
+    // Actors to ignore (include owner)
+    TArray<AActor*> ActorsToIgnore;
+    ActorsToIgnore.Add(Owner);
+
+    DrawDebugBox(GetWorld(), BoxLocation, BoxExtent, FColor::Green, false, 2.0f);
+
+    // Use AActor::StaticClass() as the class filter (cannot pass interface class here)
+    TArray<AActor*> OverlappingActors;
+    bool bHit = UKismetSystemLibrary::BoxOverlapActors(
+        this,                   // WorldContextObject
+        BoxLocation,            // Box center
+        BoxExtent,              // Box extent (half-size)
+        ObjectTypes,            // Object types to overlap
+        AActor::StaticClass(),  // Class filter - use AActor and filter by interface below
+        ActorsToIgnore,         // Actors to ignore
+        OverlappingActors       // Out actors
+    );
+
+    if (bHit)
     {
-        if (Hit.GetActor() && Hit.GetActor()->Implements<UInteractionInterface>())
+        for (AActor* Actor : OverlappingActors)
         {
-            IInteractionInterface::Execute_Interact(Hit.GetActor(), Owner);
+            if (!Actor || Actor == Owner) continue;
+
+            if (Actor->Implements<UInteractionInterface>())
+            {
+                IInteractionInterface::Execute_Interact(Actor, Owner);
+            }
         }
     }
-
-    DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 2.f);
 }

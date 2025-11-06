@@ -19,13 +19,23 @@ public:
 	
 	void EquipWeapon(AWeapon* Weapon);
 
+	void EnableWeaponCollision();
+
+	void DisableWeaponCollision();
+
+	void StopAnim();
+
 protected:
+	bool bIsAttacking = false;
+
 	virtual void BeginPlay() override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
 	void Interact(const FInputActionValue& Value);
+	void Attack(const FInputActionValue& Value);
+	void Jump(const FInputActionValue& Value);
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 	class USpringArmComponent* CameraBoom;
@@ -44,9 +54,18 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	class UInputAction* InteractAction;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	class UInputAction* AttackAction;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	class UInputAction* JumpAction;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Input")
 	class UInteractionComponent* InteractionComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combat")
+	UAnimMontage* AttackMontage;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
 	AWeapon* CurrentWeapon;

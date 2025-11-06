@@ -52,14 +52,16 @@ void AABasePlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInp
 	{
 		Input->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AABasePlayerCharacter::Move);
 		Input->BindAction(LookAction, ETriggerEvent::Triggered, this, &AABasePlayerCharacter::Look);
-		Input->BindAction(InteractAction, ETriggerEvent::Triggered, this, &AABasePlayerCharacter::Interact);
+		Input->BindAction(InteractAction, ETriggerEvent::Started, this, &AABasePlayerCharacter::Interact);
+		Input->BindAction(JumpAction, ETriggerEvent::Started, this, &AABasePlayerCharacter::Jump);
+		Input->BindAction(AttackAction, ETriggerEvent::Triggered, this, &AABasePlayerCharacter::Attack);
 	}
 }
 
 void AABasePlayerCharacter::Move(const FInputActionValue& Value)
 {
 	FVector2D Movement = Value.Get<FVector2D>();
-	if (Controller != nullptr)
+	if (Controller != nullptr && !bIsAttacking)
 	{
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
@@ -72,11 +74,21 @@ void AABasePlayerCharacter::Move(const FInputActionValue& Value)
 	}
 }
 
+void AABasePlayerCharacter::Jump(const FInputActionValue& Value)
+{
+	if (!bIsAttacking)
+	{
+		ACharacter::Jump();
+	}
+}
+
 void AABasePlayerCharacter::Look(const FInputActionValue& Value)
 {
 	FVector2D LookAxis = Value.Get<FVector2D>();
 	AddControllerYawInput(LookAxis.X);
 	AddControllerPitchInput(-LookAxis.Y);
+
+	UE_LOG(LogTemp, Warning, TEXT("bIsAttacking = %s"), bIsAttacking ? TEXT("true") : TEXT("false"));
 }
 
 void AABasePlayerCharacter::Interact(const FInputActionValue& Value)
@@ -105,4 +117,34 @@ void AABasePlayerCharacter::EquipWeapon(AWeapon* Weapon)
 	}
 
 	CurrentWeapon = Weapon;
+	CurrentWeapon->ownerCharacter = this;
+	CurrentWeapon->DisableCollision();
+}
+
+void AABasePlayerCharacter::Attack(const FInputActionValue& Value)
+{
+	if (AttackMontage && !bIsAttacking && CurrentWeapon)
+	{
+		bIsAttacking = true;
+		PlayAnimMontage(AttackMontage);
+	}
+}
+
+void AABasePlayerCharacter::StopAnim()
+{
+	StopAnimMontage(AttackMontage);
+	DisableWeaponCollision();
+}
+
+void AABasePlayerCharacter::EnableWeaponCollision()
+{
+	if (CurrentWeapon)
+		CurrentWeapon->EnableCollision();
+}
+
+void AABasePlayerCharacter::DisableWeaponCollision()
+{
+	if (CurrentWeapon)
+		CurrentWeapon->DisableCollision();
+	bIsAttacking = false;
 }

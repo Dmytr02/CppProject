@@ -18,8 +18,13 @@ public class Project : ModuleRules
 			"StateTreeModule",
 			"GameplayStateTreeModule",
 			"UMG",
-			"Slate"
-		});
+			"Slate",
+            "GeometryCollectionEngine",
+			"ChaosSolverEngine",          
+			"Chaos",
+            "FieldSystemEngine"
+        });
+
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
 
