@@ -1,5 +1,84 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "ABaseEnemyCharacter.h"
 
+#include "ABaseEnemyCharacter.h"
+#include "Kismet/GameplayStatics.h"
+#include "AIController.h"
+#include "GameFramework/CharacterMovementComponent.h"
+
+AABaseEnemyCharacter::AABaseEnemyCharacter()
+{
+    PrimaryActorTick.bCanEverTick = true;
+
+    PawnSensingComp = CreateDefaultSubobject<UPawnSensingComponent>(TEXT("PawnSensing"));
+    PawnSensingComp->SightRadius = 1500.f;      // Радиус зрения
+    PawnSensingComp->SetPeripheralVisionAngle(70.f); // Угол обзора
+}
+
+void AABaseEnemyCharacter::BeginPlay()
+{
+    Super::BeginPlay();
+
+    if (PawnSensingComp)
+    {
+        PawnSensingComp->OnSeePawn.AddDynamic(this, &AABaseEnemyCharacter::OnSeePawn);
+    }
+
+    if (WeaponClass) // WeaponClass задаём в BP
+    {
+        CurrentWeapon = GetWorld()->SpawnActor<AWeapon>(WeaponClass, FVector::ZeroVector, FRotator::ZeroRotator);
+        CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("WeaponSocket"));
+		DisableWeaponCollision();
+    }
+}
+
+void AABaseEnemyCharacter::OnSeePawn(APawn* Pawn)
+{
+    if (!Pawn) return;
+
+    UE_LOG(LogTemp, Warning, TEXT("AI увидел %s!"), *Pawn->GetName());
+
+    AAIController* AICon = Cast<AAIController>(GetController());
+   
+    float Distance = FVector::Dist(GetActorLocation(), Pawn->GetActorLocation());
+
+    if (Distance > AttackRange && !bIsAttacking)
+    {
+        // Двигаться к игроку
+        AICon->MoveToActor(Pawn, 5.0f); // 5.0f = дистанция остановки
+    }
+    else
+    {
+        // Остановить движение
+        AICon->StopMovement();
+
+        // Запустить анимацию атаки
+        if (AttackMontage && !bIsAttacking)
+        {
+            PlayAnimMontage(AttackMontage);
+            bIsAttacking = true;
+        }
+    }
+}
+
+
+void AABaseEnemyCharacter::Deth()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Character is dead"));
+	Destroy();
+}
+
+void AABaseEnemyCharacter::EnableWeaponCollision()
+{
+    if (CurrentWeapon)
+        CurrentWeapon->EnableCollision();
+	bIsAttacking = true;
+}
+
+void AABaseEnemyCharacter::DisableWeaponCollision()
+{
+    if (CurrentWeapon)
+        CurrentWeapon->DisableCollision();
+    bIsAttacking = false;
+}

@@ -19,9 +19,9 @@ public:
 	
 	void EquipWeapon(AWeapon* Weapon);
 
-	void EnableWeaponCollision();
+	virtual void EnableWeaponCollision() override;
 
-	void DisableWeaponCollision();
+	virtual void DisableWeaponCollision() override;
 
 	void StopAnim();
 

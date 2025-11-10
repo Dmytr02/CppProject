@@ -22,6 +22,9 @@ protected:
 		UPrimitiveComponent* OtherComp, bool bSelfMoved, FVector HitLocation,
 		FVector HitNormal, FVector NormalImpulse, const FHitResult& Hit) override;
 
+	UFUNCTION() void OnOverlapStart(UPrimitiveComponent* OverLappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+		int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResu1t);
+
 public:
 	class AABasePlayerCharacter* ownerCharacter;
 	AWeapon();

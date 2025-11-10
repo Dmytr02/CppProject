@@ -87,8 +87,6 @@ void AABasePlayerCharacter::Look(const FInputActionValue& Value)
 	FVector2D LookAxis = Value.Get<FVector2D>();
 	AddControllerYawInput(LookAxis.X);
 	AddControllerPitchInput(-LookAxis.Y);
-
-	UE_LOG(LogTemp, Warning, TEXT("bIsAttacking = %s"), bIsAttacking ? TEXT("true") : TEXT("false"));
 }
 
 void AABasePlayerCharacter::Interact(const FInputActionValue& Value)

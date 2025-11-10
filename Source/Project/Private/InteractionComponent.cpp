@@ -4,6 +4,7 @@
 #include "Engine/World.h"
 #include "DrawDebugHelpers.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Engine/CollisionProfile.h"
 
 UInteractionComponent::UInteractionComponent()
 {
@@ -24,8 +25,6 @@ void UInteractionComponent::Interact()
     ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_WorldStatic));
     ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_WorldDynamic));
     ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_Pawn));
-
-    // Actors to ignore (include owner)
     TArray<AActor*> ActorsToIgnore;
     ActorsToIgnore.Add(Owner);
 
