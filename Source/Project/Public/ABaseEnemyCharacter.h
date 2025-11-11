@@ -6,7 +6,9 @@
 #include "ABaseCharacter.h"
 #include <Perception/PawnSensingComponent.h>
 #include "Weapon.h"
+#include <Components/AudioComponent.h>
 #include "ABaseEnemyCharacter.generated.h"
+
 
 /**
  * 
@@ -35,13 +37,23 @@ protected:
 
 	virtual void Deth() override;
 
+	virtual void Hit() override;
+
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
     float AttackRange = 200.f;  // дистанция для атаки
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
     UAnimMontage* AttackMontage;
+   
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
+    UAnimMontage* GetHitMontage;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
     TSubclassOf<AWeapon> WeaponClass;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
     AWeapon* CurrentWeapon;
+    
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
+    USoundBase* MySound;
 };

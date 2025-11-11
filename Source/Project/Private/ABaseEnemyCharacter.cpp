@@ -29,6 +29,8 @@ void AABaseEnemyCharacter::BeginPlay()
     {
         CurrentWeapon = GetWorld()->SpawnActor<AWeapon>(WeaponClass, FVector::ZeroVector, FRotator::ZeroRotator);
         CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("WeaponSocket"));
+		CurrentWeapon->SubscribeHit();
+		CurrentWeapon->ownerCharacter = this;
 		DisableWeaponCollision();
     }
 }
@@ -37,7 +39,7 @@ void AABaseEnemyCharacter::OnSeePawn(APawn* Pawn)
 {
     if (!Pawn) return;
 
-    UE_LOG(LogTemp, Warning, TEXT("AI увидел %s!"), *Pawn->GetName());
+    //UE_LOG(LogTemp, Warning, TEXT("AI увидел %s!"), *Pawn->GetName());
 
     AAIController* AICon = Cast<AAIController>(GetController());
    
@@ -81,4 +83,15 @@ void AABaseEnemyCharacter::DisableWeaponCollision()
     if (CurrentWeapon)
         CurrentWeapon->DisableCollision();
     bIsAttacking = false;
+}
+
+void AABaseEnemyCharacter::Hit()
+{
+    if (GetHitMontage)
+    {
+        PlayAnimMontage(GetHitMontage);
+        if (MySound) {
+            UGameplayStatics::PlaySoundAtLocation(this, MySound, GetActorLocation());
+        }
+    }
 }

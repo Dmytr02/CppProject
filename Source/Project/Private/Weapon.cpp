@@ -5,19 +5,18 @@
 #include "Components/BoxComponent.h"
 #include "GeometryCollection/GeometryCollectionComponent.h"
 #include "Chaos/ChaosGameplayEventDispatcher.h"
-//#include "BreakableVase.h"  
 
 void AWeapon::PickUp_Implementation(AActor* Caller)
 {
     if (!Caller) return;
 
     AABasePlayerCharacter* Player = Cast<AABasePlayerCharacter>(Caller);
-    if (Player)
+    if (Player && !Player->CurrentWeapon)
     {
         Player->EquipWeapon(this);
+        SubscribeHit();
     }
 
-	WeaponCollision->OnComponentBeginOverlap.AddDynamic(this, &AWeapon::OnOverlapStart);
 }
 
 AWeapon::AWeapon()
@@ -30,6 +29,7 @@ AWeapon::AWeapon()
     WeaponCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     WeaponCollision->SetCollisionResponseToAllChannels(ECR_Ignore);
     WeaponCollision->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+
 }
 
 void AWeapon::EnableCollision()
@@ -46,29 +46,30 @@ void AWeapon::DisableCollision()
     WeaponCollision->SetVisibility(false);
 }
 
+void AWeapon::SubscribeHit()
+{
+    if (!WeaponCollision->OnComponentBeginOverlap.IsAlreadyBound(this, &AWeapon::OnOverlapStart))
+    {
+        WeaponCollision->OnComponentBeginOverlap.AddDynamic(this, &AWeapon::OnOverlapStart);
+    }
+}
+
 void AWeapon::NotifyHit(UPrimitiveComponent* MyComp, AActor* Other,
     UPrimitiveComponent* OtherComp, bool bSelfMoved, FVector HitLocation,
     FVector HitNormal, FVector NormalImpulse, const FHitResult& Hit)
 {
-    UE_LOG(LogTemp, Warning, TEXT("Hit actor: %s"), *Other->GetName());
-
-	ownerCharacter->StopAnim();
+    UE_LOG(LogTemp, Error, TEXT("Hit actor: %s"), *Other->GetName());
 }
 
 void AWeapon::OnOverlapStart(UPrimitiveComponent* OverLappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& Hit)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Overlapped actor: %s | %s"), *OtherActor->GetName(), *ownerCharacter->GetName());
-	if (ownerCharacter && ownerCharacter == OtherActor) return;
+	UE_LOG(LogTemp, Error, TEXT("Overlapped actor: %s | %s"), *OtherActor->GetName(), *ownerCharacter->GetName());
+	
+    if (ownerCharacter && ownerCharacter == OtherActor) return;
+
+
     if (OtherActor->Implements<UCombat>())
     {
 		ICombat::Execute_GetHit(OtherActor, 50);
     }
-
-    /*UGeometryCollectionComponent* collisionComponent = Cast<UGeometryCollectionComponent>(OtherComp);
-    UE_LOG(LogTemp, Warning, TEXT("Overlapped actor: %s | IsNull: %s"), *OtherActor->GetName(), collisionComponent == nullptr ? TEXT("true") : TEXT("false"));
-
-	if (collisionComponent == nullptr) return;
-
-	FVector ImpulseDirection = FVector::RightVector;
-    collisionComponent->AddImpulseAtLocation(ImpulseDirection * 1000000.f, OtherActor->GetActorLocation());*/
 }

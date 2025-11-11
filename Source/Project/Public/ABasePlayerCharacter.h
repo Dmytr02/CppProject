@@ -25,6 +25,9 @@ public:
 
 	void StopAnim();
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
+	AWeapon* CurrentWeapon;
+
 protected:
 	bool bIsAttacking = false;
 
@@ -67,6 +70,5 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combat")
 	UAnimMontage* AttackMontage;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
-	AWeapon* CurrentWeapon;
+	
 };

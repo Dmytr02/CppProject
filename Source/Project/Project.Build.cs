@@ -22,7 +22,8 @@ public class Project : ModuleRules
             "GeometryCollectionEngine",
 			"ChaosSolverEngine",          
 			"Chaos",
-            "FieldSystemEngine"
+            "FieldSystemEngine",
+			"AudioExtensions"
         });
 
 

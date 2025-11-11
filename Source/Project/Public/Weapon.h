@@ -26,9 +26,10 @@ protected:
 		int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResu1t);
 
 public:
-	class AABasePlayerCharacter* ownerCharacter;
+	class AABaseCharacter* ownerCharacter;
 	AWeapon();
 	virtual void PickUp_Implementation(AActor* Caller) override;
 	void EnableCollision();
 	void DisableCollision();
+	void SubscribeHit();
 };
