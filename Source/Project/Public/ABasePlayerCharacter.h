@@ -1,10 +1,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Weapon.h"
 #include "ABaseCharacter.h"
 #include "InputActionValue.h"
-#include "InteractionComponent.h"
 #include "ABasePlayerCharacter.generated.h"
 
 UCLASS()
@@ -17,7 +15,7 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	
-	void EquipWeapon(AWeapon* Weapon);
+	void EquipWeapon(class AWeapon* Weapon);
 
 	virtual void EnableWeaponCollision() override;
 
@@ -29,8 +27,6 @@ public:
 	AWeapon* CurrentWeapon;
 
 protected:
-	bool bIsAttacking = false;
-
 	virtual void BeginPlay() override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
@@ -39,6 +35,11 @@ protected:
 	void Interact(const FInputActionValue& Value);
 	void Attack(const FInputActionValue& Value);
 	void Jump(const FInputActionValue& Value);
+
+	virtual void OnJumped_Implementation() override;
+
+	virtual void GetHit_Implementation(int value) override;
+	virtual void Death_Implementation() override;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 	class USpringArmComponent* CameraBoom;
@@ -70,5 +71,12 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combat")
 	UAnimMontage* AttackMontage;
 
-	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
+	UAnimMontage* GetHitMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
+	USoundBase* MySound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stamina SP")
+	int StaminaCostJump;
 };

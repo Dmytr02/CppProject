@@ -35,12 +35,12 @@ protected:
     UFUNCTION()
     void OnSeePawn(APawn* Pawn);
 
-	virtual void Deth() override;
+	virtual void GetHit_Implementation(int value) override;
 
-	virtual void Hit() override;
+	virtual void Death_Implementation() override;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
-    float AttackRange = 200.f;  // дистанция для атаки
+    float AttackRange = 200.f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
     UAnimMontage* AttackMontage;

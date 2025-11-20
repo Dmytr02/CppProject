@@ -5,6 +5,9 @@
 #include "Components/BoxComponent.h"
 #include "GeometryCollection/GeometryCollectionComponent.h"
 #include "Chaos/ChaosGameplayEventDispatcher.h"
+#include <Kismet/KismetSystemLibrary.h>
+#include <Kismet/GameplayStatics.h>
+#include "Combat.h"
 
 void AWeapon::PickUp_Implementation(AActor* Caller)
 {
@@ -30,11 +33,16 @@ AWeapon::AWeapon()
     WeaponCollision->SetCollisionResponseToAllChannels(ECR_Ignore);
     WeaponCollision->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 
+	BoxTraceStart = CreateDefaultSubobject<USceneComponent>(TEXT("BoxTraceStart"));
+	BoxTraceStart->SetupAttachment(GetRootComponent());
+
+	BoxTraceEnd = CreateDefaultSubobject<USceneComponent>(TEXT("BoxTraceEnd"));
+	BoxTraceEnd->SetupAttachment(GetRootComponent());
 }
 
 void AWeapon::EnableCollision()
 {
-    WeaponCollision->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+    WeaponCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
     WeaponCollision->SetHiddenInGame(false);
     WeaponCollision->SetVisibility(true);
 }
@@ -66,10 +74,64 @@ void AWeapon::OnOverlapStart(UPrimitiveComponent* OverLappedComponent, AActor* O
 	UE_LOG(LogTemp, Error, TEXT("Overlapped actor: %s | %s"), *OtherActor->GetName(), *ownerCharacter->GetName());
 	
     if (ownerCharacter && ownerCharacter == OtherActor) return;
+    
+    FHitResult BoxHit;
+    BoxTrace(BoxHit);
+    CreateForceFields(BoxHit.ImpactPoint);
 
-
-    if (OtherActor->Implements<UCombat>())
+	if (OtherActor->Implements<UCombat>())
     {
-		ICombat::Execute_GetHit(OtherActor, 50);
+		ICombat::Execute_GetHit(OtherActor, Damage);
+		DisableCollision();
     }
+
+	//if (ActorIsSameType(OtherActor)) return;
+	//FHitResult BoxHit;
+	//BoxTrace(BoxHit);
+ //   if (BoxHit.GetActor())
+ //   {
+ //       //if(ActorIsSameType(BoxHit.GetActor())) return;
+ //       //UGameplayStatics::ApplyDamage(BoxHit.GetActor(), Damage, GetInstigator()->GetController(), this, UDamageType::StaticClass());
+
+	//	ExecuteGetHit(BoxHit);
+ //       CreateForceFields(BoxHit.ImpactPoint);
+ //   }
+}
+
+void AWeapon::BoxTrace(FHitResult& BoxHit) {
+	TArray<AActor*> IgnoredActors;
+	IgnoredActors.Add(this);
+	IgnoredActors.Add(GetOwner());
+    for(AActor* Actor : IgnoreActors) {
+        IgnoredActors.Add(Actor);
+	}
+
+	UKismetSystemLibrary::BoxTraceSingle(
+        GetWorld(),
+        BoxTraceStart->GetComponentLocation(),
+        BoxTraceEnd->GetComponentLocation(),
+        WeaponCollision->GetScaledBoxExtent(),
+        BoxTraceStart->GetComponentRotation(),
+        UEngineTypes::ConvertToTraceType(ECC_Pawn),
+        false,
+        IgnoredActors,
+        EDrawDebugTrace::ForOneFrame,
+        BoxHit,
+        true
+	);
+	IgnoreActors.AddUnique(BoxHit.GetActor());
+}
+
+bool AWeapon::ActorIsSameType(AActor* OtherActor)
+{
+	return GetOwner()->ActorHasTag(TEXT("Enemy")) && OtherActor->ActorHasTag(TEXT("Enemy"));
+}
+
+void AWeapon::ExecuteGetHit(FHitResult& OtherActor)
+{
+	ICombat* CombatInterface = Cast<ICombat>(OtherActor.GetActor());
+    if(CombatInterface)
+    {
+        CombatInterface->Execute_GetHit(OtherActor.GetActor(), Damage);
+	}
 }

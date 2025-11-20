@@ -8,6 +8,8 @@
 #include "InteractionInterface.h"   
 #include "Components/InputComponent.h"
 #include "InteractionComponent.h" 
+#include <Kismet/GameplayStatics.h>
+#include "Weapon.h"
 
 AABasePlayerCharacter::AABasePlayerCharacter()
 {
@@ -61,8 +63,13 @@ void AABasePlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInp
 void AABasePlayerCharacter::Move(const FInputActionValue& Value)
 {
 	FVector2D Movement = Value.Get<FVector2D>();
-	if (Controller != nullptr && !bIsAttacking)
+	if (Controller != nullptr && (CharacterState == ECharacterState::Idle || CharacterState == ECharacterState::OutOfStamina))
 	{
+		GetMesh()->GetAnimInstance()->StopAllMontages(0.2f);
+
+		if(CharacterState == ECharacterState::OutOfStamina)
+			Movement *= 0.5f; // Move at half speed when out of stamina
+
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
 
@@ -76,10 +83,44 @@ void AABasePlayerCharacter::Move(const FInputActionValue& Value)
 
 void AABasePlayerCharacter::Jump(const FInputActionValue& Value)
 {
-	if (!bIsAttacking)
-	{
-		ACharacter::Jump();
+	if (CharacterState != ECharacterState::Idle) return;
+	if (!CanPayStaminaCost(StaminaCostJump)) {
+		CharacterState = ECharacterState::OutOfStamina;
+
+		// Создаём таймер для возврата старого состояния
+		FTimerHandle TimerHandle;
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle, [this]()
+			{
+				CharacterState = ECharacterState::Idle;
+			}, 1, false);
+		return;
 	}
+	ACharacter::Jump();
+}
+
+void AABasePlayerCharacter::OnJumped_Implementation()
+{
+	Super::OnJumped_Implementation();
+	PayStamina(StaminaCostJump);
+	UE_LOG(LogTemp, Warning, TEXT("Jump executed!"));
+}
+
+void AABasePlayerCharacter::GetHit_Implementation(int value)
+{
+	if (GetHitMontage)
+	{
+		PlayAnimMontage(GetHitMontage); 
+		if (CurrentWeapon)	CurrentWeapon->DisableCollision();
+		CharacterState = ECharacterState::GettingHit;
+	}
+	if (MySound) {
+		UGameplayStatics::PlaySoundAtLocation(this, MySound, GetActorLocation());
+	}
+	Super::GetHit_Implementation(value);
+}
+
+void AABasePlayerCharacter::Death_Implementation()
+{
 }
 
 void AABasePlayerCharacter::Look(const FInputActionValue& Value)
@@ -121,11 +162,23 @@ void AABasePlayerCharacter::EquipWeapon(AWeapon* Weapon)
 
 void AABasePlayerCharacter::Attack(const FInputActionValue& Value)
 {
-	if (AttackMontage && !bIsAttacking && CurrentWeapon)
+	if (!CurrentWeapon || GetCharacterMovement()->IsFalling() || CharacterState != ECharacterState::Idle || !AttackMontage) return;
+	if(!CanPayStaminaCost(StaminaCostAttack))
 	{
-		bIsAttacking = true;
-		PlayAnimMontage(AttackMontage);
+		CharacterState = ECharacterState::OutOfStamina;
+
+		// Создаём таймер для возврата старого состояния
+		FTimerHandle TimerHandle;
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle, [this]()
+			{
+				CharacterState = ECharacterState::Idle;
+			}, 1, false);
+		return;
 	}
+
+	PayStamina(StaminaCostAttack);
+	CharacterState = ECharacterState::Attacking;
+	PlayAnimMontage(AttackMontage);
 }
 
 void AABasePlayerCharacter::StopAnim()
@@ -144,5 +197,5 @@ void AABasePlayerCharacter::DisableWeaponCollision()
 {
 	if (CurrentWeapon)
 		CurrentWeapon->DisableCollision();
-	bIsAttacking = false;
+	CharacterState = ECharacterState::Idle;
 }

@@ -13,7 +13,7 @@ AABaseEnemyCharacter::AABaseEnemyCharacter()
 
     PawnSensingComp = CreateDefaultSubobject<UPawnSensingComponent>(TEXT("PawnSensing"));
     PawnSensingComp->SightRadius = 1500.f;      // Радиус зрения
-    PawnSensingComp->SetPeripheralVisionAngle(70.f); // Угол обзора
+    PawnSensingComp->SetPeripheralVisionAngle(90.f); // Угол обзора
 }
 
 void AABaseEnemyCharacter::BeginPlay()
@@ -65,9 +65,10 @@ void AABaseEnemyCharacter::OnSeePawn(APawn* Pawn)
 }
 
 
-void AABaseEnemyCharacter::Deth()
+void AABaseEnemyCharacter::Death_Implementation()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Character is dead"));
+    if (CurrentWeapon)
+        CurrentWeapon->Destroy();
 	Destroy();
 }
 
@@ -85,13 +86,15 @@ void AABaseEnemyCharacter::DisableWeaponCollision()
     bIsAttacking = false;
 }
 
-void AABaseEnemyCharacter::Hit()
+void AABaseEnemyCharacter::GetHit_Implementation(int value)
 {
+    Super::GetHit_Implementation(value);
     if (GetHitMontage)
     {
         PlayAnimMontage(GetHitMontage);
-        if (MySound) {
-            UGameplayStatics::PlaySoundAtLocation(this, MySound, GetActorLocation());
-        }
+        CurrentWeapon->DisableCollision();
+    }
+    if (MySound) {
+        UGameplayStatics::PlaySoundAtLocation(this, MySound, GetActorLocation());
     }
 }
