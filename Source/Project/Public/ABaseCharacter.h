@@ -64,5 +64,6 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Health HP")
 	FOnHealseChanged OnHealseChanged;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
 	ECharacterState CharacterState;
 };

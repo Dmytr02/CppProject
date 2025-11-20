@@ -197,5 +197,6 @@ void AABasePlayerCharacter::DisableWeaponCollision()
 {
 	if (CurrentWeapon)
 		CurrentWeapon->DisableCollision();
-	CharacterState = ECharacterState::Idle;
+	if(CharacterState != ECharacterState::Dead)
+		CharacterState = ECharacterState::Idle;
 }
