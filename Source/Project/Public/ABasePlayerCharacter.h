@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "ABaseCharacter.h"
 #include "InputActionValue.h"
+#include "PownStateEnum.h"
 #include "ABasePlayerCharacter.generated.h"
 
 UCLASS()
@@ -79,4 +80,7 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stamina SP")
 	int StaminaCostJump;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
+	ECharacterState CharacterState;
 };

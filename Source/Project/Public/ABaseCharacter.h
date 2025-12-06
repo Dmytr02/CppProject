@@ -6,16 +6,6 @@
 #include "ABaseCharacter.generated.h"
 
 
-UENUM(BlueprintType)
-enum class ECharacterState : uint8
-{
-	Idle,
-	Attacking,
-	GettingHit,
-	OutOfStamina,
-	Dead
-};
-
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStaminaChanged, float, NewStamina);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHealseChanged, int, NewHealse);
 
@@ -64,6 +54,5 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Health HP")
 	FOnHealseChanged OnHealseChanged;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
-	ECharacterState CharacterState;
+	
 };

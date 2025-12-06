@@ -38,7 +38,6 @@ void AABaseCharacter::GetHit_Implementation(int value)
 	}
 	if (Health <= 0)
 	{
-		CharacterState = ECharacterState::Dead;
 		Execute_Death(this);
 	}
 }

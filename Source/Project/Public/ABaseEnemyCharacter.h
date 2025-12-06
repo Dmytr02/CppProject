@@ -7,6 +7,7 @@
 #include <Perception/PawnSensingComponent.h>
 #include "Weapon.h"
 #include <Components/AudioComponent.h>
+#include "PownStateEnum.h"
 #include "ABaseEnemyCharacter.generated.h"
 
 
@@ -24,6 +25,8 @@ public:
     virtual void EnableWeaponCollision() override;
 
     virtual void DisableWeaponCollision() override;
+    UFUNCTION(BlueprintCallable)
+    void TryAttack();
 
 protected:
     bool bIsAttacking = false;
@@ -34,6 +37,7 @@ protected:
 
     UFUNCTION()
     void OnSeePawn(APawn* Pawn);
+
 
 	virtual void GetHit_Implementation(int value) override;
 
@@ -56,4 +60,10 @@ protected:
     
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
     USoundBase* MySound;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
+    EEnamyState CharacterState;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
+	AActor* TargetActor;
 };
