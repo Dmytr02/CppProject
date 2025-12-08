@@ -14,7 +14,7 @@ void AWeapon::PickUp_Implementation(AActor* Caller)
     if (!Caller) return;
 
     AABasePlayerCharacter* Player = Cast<AABasePlayerCharacter>(Caller);
-    if (Player && !Player->CurrentWeapon)
+    if (Player && !Player->CurrentWeapon && !ownerCharacter)
     {
         Player->EquipWeapon(this);
         SubscribeHit();
